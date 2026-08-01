@@ -1,5 +1,4 @@
 import sys
-
 from random import randint
 
 import pygame
@@ -115,8 +114,9 @@ class Snake(GameObject):
             self.positions = [head_position] * length
         else:
             if len(positions) != length:
+                pos_len = len(positions)
                 raise ValueError(
-                    f'Длина змейки {len(positions)} '
+                    f'Длина змейки {pos_len} '
                     f'не совпадает с ожидаемой {length}!'
                 )
             else:
