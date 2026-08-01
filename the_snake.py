@@ -1,7 +1,5 @@
 import sys
-
 from random import randint
-
 import pygame
 
 SCREEN_WIDTH, SCREEN_HEIGHT = 640, 480
@@ -26,8 +24,6 @@ SPEED = 8
 
 screen = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
 clock = pygame.time.Clock()
-
-
 class GameObject:
     """
     Базовый класс для игровых объектов.
@@ -116,8 +112,8 @@ class Snake(GameObject):
         else:
             if len(positions) != length:
                 raise ValueError(
-                    f"Длина змейки {len(positions)} "
-                    "не совпадает с ожидаемой {length}!"
+                    f'Длина змейки {len(positions)} '
+                    'не совпадает с ожидаемой {length}!'
                 )
             else:
                 self.positions = positions
