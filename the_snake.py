@@ -1,7 +1,7 @@
 import sys
 from random import randint
-
 import pygame as pg
+from typing import List, Tuple
 
 SCREEN_WIDTH, SCREEN_HEIGHT = 640, 480
 SCREEN_CENTER = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
@@ -21,7 +21,6 @@ BOARD_BACKGROUND_COLOR: COLOR = (0, 0, 0)
 BORDER_COLOR: COLOR = (93, 216, 228)
 APPLE_COLOR: COLOR = (255, 0, 0)
 SNAKE_COLOR: COLOR = (0, 255, 0)
-
 DEFAULT_COLOR: COLOR = (128, 128, 128)
 
 SPEED = 8
@@ -32,19 +31,15 @@ clock = pg.time.Clock()
 
 
 class GameObject:
-    """
-    Базовый класс для игровых объектов.
-
+    """Базовый класс для игровых объектов.
     Хранит позицию объекта на игровом поле и его цвет.
-
-    Дает общую логику отрисовки.
-
+    Даёт общую логику отрисовки.
     От него наследуются классы Apple и Snake.
     """
 
     def __init__(self, body_color=DEFAULT_COLOR, position=None):
         self.body_color = body_color
-        self.position = position if position is not None else SCREEN_CENTER
+        self.position = position or SCREEN_CENTER
 
     def draw(self) -> None:
         """Отрисовывает игровой объект на экране."""
@@ -52,25 +47,23 @@ class GameObject:
 
 
 class Apple(GameObject):
-    """
-    Представляет яблоко в игре.
-    Занимает одну клетку. Позиция выровнена
-    по координатам сетки, кратна GRID_SIZE.
-
+    """Представляет яблоко в игре. Занимает одну клетку.
+    Позиция выровнена по координатам сетки, кратна GRID_SIZE.
     При поедании змейкой увеличивает
     длину змейки и появляется в случайной клетке.
     """
 
-    def __init__(self):
-        """Инициализирует яблоко: задает цвет и случайную позицию"""
-        super().__init__(body_color=APPLE_COLOR)
+    def __init__(self, position=None):
+        """Инициализирует яблоко: задаёт цвет и случайную позицию."""
+        super().__init__(body_color=APPLE_COLOR, position=position)
 
-    def randomize_position(self, occupied_positions):
-        """
-        Устанавливает позицию яблока в случайной клетке игрового поля.
-
-        Координаты выбираются так, чтобы яблоко было внутри игрового поля и
-        занимало ровно одну клетку.
+    def randomize_position(
+        self,
+        occupied_positions: List[Tuple[int, int]]
+    ) -> None:
+        """Устанавливает позицию яблока в случайной клетке игрового поля.
+        Координаты выбираются так, чтобы яблоко было внутри игрового поля
+        и занимало ровно одну клетку.
         """
         while True:
             x = randint(0, GRID_WIDTH - 1)
@@ -92,44 +85,33 @@ class Apple(GameObject):
 
 
 class Snake(GameObject):
-    """
-    Представляет управляемую змейку в игре.
-
+    """Представляет управляемую змейку в игре.
     Двигается по полю, увеличивается в длине при поедании яблока.
-    Голова змейки всегда расположена первым элементом в ее траектории.
-    При выходе за границу поля змейка
-    появляется с противоположной стороны поля.
+    Голова змейки всегда расположена первым элементом в её траектории.
+    При выходе за границу поля змейка появляется
+    с противоположной стороны поля.
     """
 
-    def __init__(
-            self, positions=None,
-            direction=RIGHT,
-            length=1, next_direction=None,
-            last=None):
-        super().__init__(body_color=SNAKE_COLOR, position=None)
-        self.length = length
-        self.last = last
-        self.direction = direction
-        self.next_direction = next_direction
-        if positions is None:
-            start_x = (SCREEN_WIDTH // 2)
-            start_y = (SCREEN_HEIGHT // 2)
+    def __init__(self, position=None):
+        super().__init__(body_color=SNAKE_COLOR, position=position)
+        self.length = 1
+        self.last = None
+        self.direction = RIGHT
+        self.next_direction = None
+        self.ate_apple = False
+
+        if position is None:
+            start_x = SCREEN_WIDTH // 2
+            start_y = SCREEN_HEIGHT // 2
             head_position = (start_x, start_y)
-            self.positions = [head_position] * length
+            self.positions = [head_position] * self.length
         else:
-            if len(positions) != length:
-                pos_len = len(positions)
-                raise ValueError(
-                    f'Длина змейки {pos_len} '
-                    f'не совпадает с ожидаемой {length}!'
-                )
-            else:
-                self.positions = positions
+            self.positions = [position] * self.length
 
     def draw(self, screen):
-        """Отрисовывает змейку на игровом поле"""
+        """Отрисовывает змейку на игровом поле."""
         for position in self.positions[:-1]:
-            rect = (pg.Rect(position, (GRID_SIZE, GRID_SIZE)))
+            rect = pg.Rect(position, (GRID_SIZE, GRID_SIZE))
             pg.draw.rect(screen, self.body_color, rect)
             pg.draw.rect(screen, BORDER_COLOR, rect, 1)
 
@@ -138,15 +120,15 @@ class Snake(GameObject):
         pg.draw.rect(screen, BORDER_COLOR, head_rect, 1)
 
     def handle_keys(self):
-        """
-        Обрабатывает ввод с клавиатуры и событие закрытия окна.
+        """Обрабатывает ввод с клавиатуры и
+        событие закрытия окна.
 
-        Считывает нажатия стрелок и сохраняет запрошенное направление
-        в атрибуте self.next_direction (не применяя его сразу).
+        Считывает нажатия стрелок и
+        сохраняет запрошенное направление в атрибуте
+        self.next_direction (не применяя его сразу).
 
         Это позволяет методу update_direction
         проверить запрет разворота на 180 градусов.
-
         При попытке закрыть окно корректно завершает работу программы.
         """
         for event in pg.event.get():
@@ -164,8 +146,7 @@ class Snake(GameObject):
                     self.next_direction = RIGHT
 
     def update_direction(self):
-        """
-        Применяет запрошенное направление движения,
+        """Применяет запрошенное направление движения,
         если оно не противоположно текущему.
 
         Блокирует разворот на 180 градусов,
@@ -174,8 +155,8 @@ class Snake(GameObject):
         """
         if self.next_direction is not None:
             is_opposite = (
-                self.direction[0] == -self.next_direction[0]
-                and self.direction[1] == -self.next_direction[1]
+                self.direction[0] == -self.next_direction[0],
+                self.direction[1] == -self.next_direction[1]
             )
 
             if not is_opposite:
@@ -188,13 +169,10 @@ class Snake(GameObject):
         return self.positions[0]
 
     def move(self):
-        """
-        Выполняет один шаг движения змейки в текущем направлении.
-        Реализует механику «туннеля».
-        Корректирует длину тела.
+        """Выполняет один шаг движения змейки в текущем направлении.
+        Реализует механику «туннеля». Корректирует длину тела.
         """
         head_pos = self.get_head_position()
-
         new_pos = (
             (head_pos[0] + self.direction[0] * GRID_SIZE) % SCREEN_WIDTH,
             (head_pos[1] + self.direction[1] * GRID_SIZE) % SCREEN_HEIGHT
@@ -202,20 +180,22 @@ class Snake(GameObject):
 
         self.positions.insert(0, new_pos)
 
-        if len(self.positions) > self.length:
-            self.positions.pop()
+        if self.ate_apple:
+            self.ate_apple = False
+        else:
+            if len(self.positions) > self.length:
+                self.positions.pop()
 
     def reset(self):
-        """
-        Сбрасывает состояние змейки к начальному.
-        Устанавливает направление вправо, длина в 1 сегмент.
-
+        """Сбрасывает состояние змейки к начальному.
+        Устанавливает направление вправо, длина — 1 сегмент.
         Змейка возвращается в центр поля.
         """
         self.direction = RIGHT
         self.length = 1
-        start_x = (SCREEN_WIDTH // 2)
-        start_y = (SCREEN_HEIGHT // 2)
+        self.ate_apple = False
+        start_x = SCREEN_WIDTH // 2
+        start_y = SCREEN_HEIGHT // 2
         self.positions = [(start_x, start_y)]
 
 
@@ -225,12 +205,12 @@ def handle_keys(game_object):
 
 
 def main():
-    """
-    Запускает основной игровой цикл приложения.
-    Инициализирует игровое окно, создает объекты змейки и яблоко.
+    """Запускает основной игровой цикл приложения.
+    Инициализирует игровое окно, создаёт объекты змейки и яблоко.
 
-    В бесконечном цикле происходит обработка событий и
-    обновление состояния игры.
+    В бесконечном цикле происходит
+    обработка событий и обновление состояния игры.
+
     Отрисовываются кадры с фиксированной частотой кадров (FPS).
     """
     global screen, clock
@@ -241,7 +221,7 @@ def main():
     if 'pytest' not in sys.modules:
         screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), 0, 32)
         pg.display.set_caption('Змейка')
-        # В не тестовом режиме можно пересоздать часы, но это не обязательно
+        # В нетестовом режиме можно пересоздать часы, но это не обязательно
         clock = pg.time.Clock()
 
     snake = Snake()
@@ -257,15 +237,13 @@ def main():
         screen.fill(BOARD_BACKGROUND_COLOR)
 
         handle_keys(snake)
-
         snake.update_direction()
-
         snake.move()
 
         head_pos = snake.get_head_position()
 
         if head_pos == apple.position:
-            snake.length += 1
+            snake.ate_apple = True
             apple.randomize_position(snake.positions)
 
         if head_pos in snake.positions[1:]:
