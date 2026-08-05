@@ -1,6 +1,5 @@
 import sys
 from random import randint
-from typing import List, Tuple
 
 import pygame as pg
 
@@ -26,7 +25,6 @@ DEFAULT_COLOR: COLOR = (128, 128, 128)
 
 SPEED = 8
 
-# Создаём объекты без инициализации Pygame (для тестов)
 screen = pg.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
 clock = pg.time.Clock()
 
@@ -54,13 +52,13 @@ class Apple(GameObject):
     длину змейки и появляется в случайной клетке.
     """
 
-    def __init__(self, position=None):
+    def __init__(self, position: tuple[int, int] | None = None):
         """Инициализирует яблоко: задаёт цвет и случайную позицию."""
         super().__init__(body_color=APPLE_COLOR, position=position)
 
     def randomize_position(
         self,
-        occupied_positions: List[Tuple[int, int]]
+        occupied_positions: list[tuple[int, int]]
     ) -> None:
         """Устанавливает позицию яблока в случайной клетке игрового поля.
         Координаты выбираются так, чтобы яблоко было внутри игрового поля
@@ -93,13 +91,13 @@ class Snake(GameObject):
     с противоположной стороны поля.
     """
 
-    def __init__(self, position=None):
+    def __init__(self, position: tuple[int, int] | None = None):
         super().__init__(body_color=SNAKE_COLOR, position=position)
         self.length = 1
         self.last = None
         self.direction = RIGHT
         self.next_direction = None
-        self.ate_apple = False
+        self.grow_next_frame = False
 
         if position is None:
             start_x = SCREEN_WIDTH // 2
@@ -181,8 +179,8 @@ class Snake(GameObject):
 
         self.positions.insert(0, new_pos)
 
-        if self.ate_apple:
-            self.ate_apple = False
+        if self.grow_next_frame:
+            self.grow_next_frame = False
         else:
             if len(self.positions) > self.length:
                 self.positions.pop()
@@ -194,7 +192,7 @@ class Snake(GameObject):
         """
         self.direction = RIGHT
         self.length = 1
-        self.ate_apple = False
+        self.grow_next_frame = False
         start_x = SCREEN_WIDTH // 2
         start_y = SCREEN_HEIGHT // 2
         self.positions = [(start_x, start_y)]
@@ -244,7 +242,7 @@ def main():
         head_pos = snake.get_head_position()
 
         if head_pos == apple.position:
-            snake.ate_apple = True
+            snake.grow_next_frame = True
             apple.randomize_position(snake.positions)
 
         if head_pos in snake.positions[1:]:
