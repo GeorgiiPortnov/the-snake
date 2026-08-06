@@ -36,7 +36,7 @@ class GameObject:
     От него наследуются классы Apple и Snake.
     """
 
-    def __init__(self, body_color=DEFAULT_COLOR, position=None):
+    def __init__(self, body_color: COLOR = DEFAULT_COLOR, position=None):
         self.body_color = body_color
         self.position = position or SCREEN_CENTER
 
@@ -52,9 +52,12 @@ class Apple(GameObject):
     длину змейки и появляется в случайной клетке.
     """
 
-    def __init__(self, position: tuple[int, int] | None = None):
+    def __init__(
+        self, position: POINTER | None = None,
+        body_color: COLOR = APPLE_COLOR
+    ):
         """Инициализирует яблоко: задаёт цвет и случайную позицию."""
-        super().__init__(body_color=APPLE_COLOR, position=position)
+        super().__init__(body_color=body_color, position=position)
 
     def randomize_position(
         self,
@@ -181,9 +184,8 @@ class Snake(GameObject):
 
         if self.grow_next_frame:
             self.grow_next_frame = False
-        else:
-            if len(self.positions) > self.length:
-                self.positions.pop()
+        elif len(self.positions) > self.length:
+            self.positions.pop()
 
     def reset(self):
         """Сбрасывает состояние змейки к начальному.
