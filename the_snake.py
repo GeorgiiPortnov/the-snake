@@ -36,7 +36,10 @@ class GameObject:
     От него наследуются классы Apple и Snake.
     """
 
-    def __init__(self, body_color: COLOR = DEFAULT_COLOR, position=None):
+    def __init__(
+        self, body_color: COLOR = DEFAULT_COLOR,
+        position: POINTER | None = None
+    ):
         self.body_color = body_color
         self.position = position or SCREEN_CENTER
 
@@ -53,8 +56,8 @@ class Apple(GameObject):
     """
 
     def __init__(
-        self, position: POINTER | None = None,
-        body_color: COLOR = APPLE_COLOR
+        self, body_color: COLOR = APPLE_COLOR,
+        position: POINTER | None = None,
     ):
         """Инициализирует яблоко: задаёт цвет и случайную позицию."""
         super().__init__(body_color=body_color, position=position)
@@ -94,8 +97,11 @@ class Snake(GameObject):
     с противоположной стороны поля.
     """
 
-    def __init__(self, position: tuple[int, int] | None = None):
-        super().__init__(body_color=SNAKE_COLOR, position=position)
+    def __init__(
+        self, body_color: COLOR = SNAKE_COLOR,
+        position: POINTER | None = None
+    ):
+        super().__init__(body_color=body_color, position=position)
         self.length = 1
         self.last = None
         self.direction = RIGHT
